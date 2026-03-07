@@ -7,6 +7,9 @@ backend/*.iml
 frontend/node_modules/
 frontend/dist/
 
+# Claude Code
+CLAUDE.md
+
 # IDE
 .idea/
 .vscode/
