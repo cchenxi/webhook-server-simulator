@@ -11,16 +11,7 @@
 
 ## 快速开始
 
-### 1. 启动后端
-
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-后端运行在 `http://localhost:8080`
-
-### 2. 启动前端
+### 1. 启动前端
 
 ```bash
 cd frontend
@@ -29,6 +20,19 @@ npm run dev
 ```
 
 前端运行在 `http://localhost:5173`，打开浏览器访问即可看到 Web UI。
+
+### 2. 启动后端
+
+在 Web UI 中点击 **Backend** 标签页，点击 **Start** 按钮即可一键启动后端（默认 Maven 模式）。
+
+也可以手动启动：
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+后端运行在 `http://localhost:8080`。前端会自动检测到已运行的后端并标记为 `external` 状态。
 
 ### 3. 发送 Webhook
 
@@ -102,6 +106,7 @@ curl -X PUT http://localhost:8080/api/concurrency \
 - **消息详情**: 查看完整 Headers、Body（JSON 自动格式化）、元信息
 - **响应规则编辑器**: 管理自定义响应规则（路径模式、状态码、响应体、延迟）
 - **并发控制面板**: 查看和动态调整并发/限流参数
+- **后端管理面板**: 一键启停后端服务，支持 Maven/JAR 模式切换、配置编辑、实时日志查看
 
 ### 自定义响应规则
 
@@ -114,6 +119,15 @@ curl -X PUT http://localhost:8080/api/concurrency \
 - **最大并发数**: Semaphore 限制，超出可排队等待或直接拒绝（503）
 - **限流**: 令牌桶算法，超出速率返回 429
 - **动态调整**: 通过 API 或 Web UI 实时修改参数
+
+### 后端进程管理
+
+- **一键启停**: 通过 Web UI 启动、停止、重启后端，无需命令行操作
+- **双模式**: 支持 Maven 开发模式和 JAR 部署模式
+- **外部检测**: 自动检测端口上已运行的外部后端，避免冲突
+- **实时日志**: 深色终端风格日志查看器，区分 stdout/stderr/系统消息
+- **配置可编辑**: 端口、后端目录、JAR 路径、Java 参数均可在 UI 中修改
+- **自动清理**: Vite dev server 关闭时自动终止后端子进程
 
 ## API 参考
 
@@ -129,6 +143,12 @@ curl -X PUT http://localhost:8080/api/concurrency \
 | DELETE | `/api/rules/{id}` | 删除响应规则 |
 | GET | `/api/concurrency` | 查询并发配置 |
 | PUT | `/api/concurrency` | 更新并发配置 |
+| GET | `/api/backend/status` | 查询后端运行状态 |
+| POST | `/api/backend/start` | 启动后端 |
+| POST | `/api/backend/stop` | 停止后端 |
+| POST | `/api/backend/restart` | 重启后端 |
+| GET | `/api/backend/logs` | 查询后端日志（?since= 增量） |
+| GET/PUT | `/api/backend/config` | 查询/更新后端配置 |
 
 ## 项目结构
 
@@ -143,9 +163,10 @@ webhook-server-simulator/
 │       ├── websocket/        # WebSocket 配置
 │       └── config/           # Web 配置
 ├── frontend/                 # React + Vite 前端
+│   ├── vite-plugin-backend-manager.ts  # Vite 插件：后端进程管理
 │   └── src/
-│       ├── components/       # UI 组件
-│       ├── hooks/            # WebSocket hook
+│       ├── components/       # UI 组件（含 BackendPanel）
+│       ├── hooks/            # WebSocket / 后端状态 hooks
 │       └── services/         # API 调用
 └── webhook-client.sh         # 定时发送 webhook 的测试客户端
 ```
