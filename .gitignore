@@ -6,6 +6,7 @@ backend/*.iml
 # Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/.backend-config.json
 
 # Claude Code
 CLAUDE.md

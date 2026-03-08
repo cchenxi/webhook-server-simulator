@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import backendManager from './vite-plugin-backend-manager';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), backendManager()],
   server: {
     port: 5173,
     proxy: {

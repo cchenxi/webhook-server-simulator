@@ -107,3 +107,80 @@ export async function updateConcurrencyConfig(config: ConcurrencyConfig): Promis
   });
   return handleResponse<ConcurrencyConfig>(res);
 }
+
+// ===== Backend Management =====
+
+export interface BackendConfig {
+  mode: 'maven' | 'jar';
+  port: number;
+  backendDir: string;
+  jarPath: string;
+  javaOpts: string;
+}
+
+export interface BackendLogEntry {
+  timestamp: string;
+  stream: 'stdout' | 'stderr' | 'system';
+  text: string;
+  id: number;
+}
+
+export interface BackendStatusResponse {
+  status: 'stopped' | 'starting' | 'running' | 'stopping' | 'external';
+  pid: number | null;
+  uptime: number | null;
+  config: BackendConfig;
+  ok?: boolean;
+  error?: string;
+}
+
+export async function fetchBackendStatus(): Promise<BackendStatusResponse> {
+  const res = await fetch(`${BASE}/api/backend/status`);
+  return handleResponse<BackendStatusResponse>(res);
+}
+
+export async function startBackend(mode?: 'maven' | 'jar'): Promise<BackendStatusResponse> {
+  const res = await fetch(`${BASE}/api/backend/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(mode ? { mode } : {}),
+  });
+  return handleResponse<BackendStatusResponse>(res);
+}
+
+export async function stopBackend(force = false): Promise<BackendStatusResponse> {
+  const res = await fetch(`${BASE}/api/backend/stop`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ force }),
+  });
+  return handleResponse<BackendStatusResponse>(res);
+}
+
+export async function restartBackend(): Promise<BackendStatusResponse> {
+  const res = await fetch(`${BASE}/api/backend/restart`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+  return handleResponse<BackendStatusResponse>(res);
+}
+
+export async function fetchBackendLogs(since = 0): Promise<{ logs: BackendLogEntry[] }> {
+  const res = await fetch(`${BASE}/api/backend/logs?since=${since}`);
+  return handleResponse<{ logs: BackendLogEntry[] }>(res);
+}
+
+export async function fetchBackendConfig(): Promise<BackendConfig> {
+  const res = await fetch(`${BASE}/api/backend/config`);
+  return handleResponse<BackendConfig>(res);
+}
+
+export async function updateBackendConfig(config: Partial<BackendConfig>): Promise<BackendConfig> {
+  const res = await fetch(`${BASE}/api/backend/config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  return handleResponse<BackendConfig>(res);
+}
