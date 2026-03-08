@@ -1,4 +1,5 @@
 import type { WebhookMessage } from '../services/api';
+import { useTranslation } from '../i18n';
 
 interface MessageDetailProps {
   message: WebhookMessage | null;
@@ -35,12 +36,14 @@ function methodClass(method: string): string {
 }
 
 export default function MessageDetail({ message }: MessageDetailProps) {
+  const { t } = useTranslation();
+
   if (!message) {
     return (
       <div className="message-detail empty-detail">
         <div className="empty-state">
           <div className="empty-state-icon">&#128270;</div>
-          <p>Select a message to view details</p>
+          <p>{t('messageDetail.selectMessage')}</p>
         </div>
       </div>
     );
@@ -54,37 +57,37 @@ export default function MessageDetail({ message }: MessageDetailProps) {
   return (
     <div className="message-detail">
       <div className="detail-section">
-        <h3>General Info</h3>
+        <h3>{t('messageDetail.generalInfo')}</h3>
         <div className="detail-grid">
-          <div className="detail-label">Method</div>
+          <div className="detail-label">{t('messageDetail.method')}</div>
           <div className="detail-value">
             <span className={`method-badge ${methodClass(message.method)}`}>{message.method}</span>
           </div>
-          <div className="detail-label">Path</div>
+          <div className="detail-label">{t('messageDetail.path')}</div>
           <div className="detail-value"><code>{message.path}</code></div>
-          <div className="detail-label">Source IP</div>
+          <div className="detail-label">{t('messageDetail.sourceIp')}</div>
           <div className="detail-value">{message.sourceIp}</div>
-          <div className="detail-label">Timestamp</div>
+          <div className="detail-label">{t('messageDetail.timestamp')}</div>
           <div className="detail-value">{formatTimestamp(message.timestamp)}</div>
-          <div className="detail-label">Response Status</div>
+          <div className="detail-label">{t('messageDetail.responseStatus')}</div>
           <div className="detail-value">
             <span className={`status-badge ${message.responseStatusCode >= 400 ? 'status-error' : 'status-ok'}`}>
               {message.responseStatusCode}
             </span>
           </div>
-          <div className="detail-label">Message ID</div>
+          <div className="detail-label">{t('messageDetail.messageId')}</div>
           <div className="detail-value"><code className="id-code">{message.id}</code></div>
         </div>
       </div>
 
       {headerEntries.length > 0 && (
         <div className="detail-section">
-          <h3>Headers</h3>
+          <h3>{t('messageDetail.headers')}</h3>
           <table className="kv-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Value</th>
+                <th>{t('messageDetail.headerName')}</th>
+                <th>{t('messageDetail.headerValue')}</th>
               </tr>
             </thead>
             <tbody>
@@ -101,12 +104,12 @@ export default function MessageDetail({ message }: MessageDetailProps) {
 
       {queryEntries.length > 0 && (
         <div className="detail-section">
-          <h3>Query Parameters</h3>
+          <h3>{t('messageDetail.queryParams')}</h3>
           <table className="kv-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Value</th>
+                <th>{t('messageDetail.paramName')}</th>
+                <th>{t('messageDetail.paramValue')}</th>
               </tr>
             </thead>
             <tbody>
@@ -122,11 +125,11 @@ export default function MessageDetail({ message }: MessageDetailProps) {
       )}
 
       <div className="detail-section">
-        <h3>Body</h3>
+        <h3>{t('messageDetail.body')}</h3>
         {message.body ? (
           <pre className="code-block">{tryFormatJson(message.body)}</pre>
         ) : (
-          <p className="empty-body">No body content</p>
+          <p className="empty-body">{t('messageDetail.noBody')}</p>
         )}
       </div>
     </div>

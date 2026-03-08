@@ -7,16 +7,30 @@ import BackendPanel from './components/BackendPanel';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useBackendStatus } from './hooks/useBackendStatus';
 import { fetchMessageCount } from './services/api';
+import { I18nProvider, useTranslation } from './i18n';
 import type { WebhookMessage } from './services/api';
 
 type Tab = 'messages' | 'rules' | 'concurrency' | 'backend';
 
-export default function App() {
+function LanguageSwitcher() {
+  const { locale, setLocale } = useTranslation();
+  return (
+    <button
+      className="lang-switcher"
+      onClick={() => setLocale(locale === 'zh' ? 'en' : 'zh')}
+    >
+      {locale === 'zh' ? 'EN' : '中'}
+    </button>
+  );
+}
+
+function AppContent() {
   const [activeTab, setActiveTab] = useState<Tab>('messages');
   const [selectedMessage, setSelectedMessage] = useState<WebhookMessage | null>(null);
   const [messageCount, setMessageCount] = useState(0);
   const { latestMessage, connected } = useWebSocket();
   const { status: backendStatus } = useBackendStatus();
+  const { t } = useTranslation();
 
   const loadCount = useCallback(async () => {
     try {
@@ -45,15 +59,16 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">Webhook Server Simulator</h1>
+          <h1 className="app-title">{t('app.title')}</h1>
           <div className="connection-status">
             <span className={`status-dot ${connected ? 'connected' : 'disconnected'}`} />
-            {connected ? 'Connected' : 'Disconnected'}
+            {connected ? t('app.connected') : t('app.disconnected')}
           </div>
           <div className="connection-status">
             <span className={`backend-status-dot ${backendStatus === 'running' ? 'backend-running' : backendStatus === 'starting' ? 'backend-starting' : backendStatus === 'external' ? 'backend-external' : 'backend-stopped'}`} />
-            Backend: {backendStatus}
+            {t('app.backend')}: {backendStatus}
           </div>
+          <LanguageSwitcher />
         </div>
       </header>
 
@@ -62,26 +77,26 @@ export default function App() {
           className={`tab-btn ${activeTab === 'messages' ? 'active' : ''}`}
           onClick={() => setActiveTab('messages')}
         >
-          Messages
+          {t('tabs.messages')}
           {messageCount > 0 && <span className="tab-badge">{messageCount}</span>}
         </button>
         <button
           className={`tab-btn ${activeTab === 'rules' ? 'active' : ''}`}
           onClick={() => setActiveTab('rules')}
         >
-          Response Rules
+          {t('tabs.rules')}
         </button>
         <button
           className={`tab-btn ${activeTab === 'concurrency' ? 'active' : ''}`}
           onClick={() => setActiveTab('concurrency')}
         >
-          Concurrency
+          {t('tabs.concurrency')}
         </button>
         <button
           className={`tab-btn ${activeTab === 'backend' ? 'active' : ''}`}
           onClick={() => setActiveTab('backend')}
         >
-          Backend
+          {t('tabs.backend')}
         </button>
       </nav>
 
@@ -106,5 +121,13 @@ export default function App() {
         {activeTab === 'backend' && <BackendPanel />}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   );
 }

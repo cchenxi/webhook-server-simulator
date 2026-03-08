@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { WebhookMessage } from '../services/api';
 import { fetchMessages, clearMessages as apiClearMessages } from '../services/api';
+import { useTranslation } from '../i18n';
 
 interface MessageListProps {
   onSelectMessage: (message: WebhookMessage) => void;
@@ -34,6 +35,7 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const loadMessages = useCallback(async (query?: string) => {
     setLoading(true);
@@ -42,11 +44,11 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
       const data = await fetchMessages(query);
       setMessages(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load messages');
+      setError(err instanceof Error ? err.message : t('messages.failedToLoad'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadMessages();
@@ -71,12 +73,12 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
   };
 
   const handleClear = async () => {
-    if (!confirm('Clear all messages?')) return;
+    if (!confirm(t('messages.clearConfirm'))) return;
     try {
       await apiClearMessages();
       setMessages([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear messages');
+      setError(err instanceof Error ? err.message : t('messages.failedToClear'));
     }
   };
 
@@ -86,27 +88,27 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
         <div className="search-box">
           <input
             type="text"
-            placeholder="Search messages..."
+            placeholder={t('messages.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <button onClick={handleSearch} className="btn btn-secondary">Search</button>
+          <button onClick={handleSearch} className="btn btn-secondary">{t('messages.search')}</button>
         </div>
-        <button onClick={handleClear} className="btn btn-danger">Clear All</button>
+        <button onClick={handleClear} className="btn btn-danger">{t('messages.clearAll')}</button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
 
       {loading && messages.length === 0 && (
-        <div className="empty-state">Loading messages...</div>
+        <div className="empty-state">{t('messages.loadingMessages')}</div>
       )}
 
       {!loading && messages.length === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon">&#128233;</div>
-          <p>No messages yet</p>
-          <p className="empty-state-hint">Send a webhook to <code>/webhook/...</code> to see it here</p>
+          <p>{t('messages.noMessages')}</p>
+          <p className="empty-state-hint">{t('messages.noMessagesHint').replace('{0}', '')}<code>/webhook/...</code></p>
         </div>
       )}
 
@@ -115,10 +117,10 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
           <table className="message-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Method</th>
-                <th>Path</th>
-                <th>Status</th>
+                <th>{t('messages.time')}</th>
+                <th>{t('messages.method')}</th>
+                <th>{t('messages.path')}</th>
+                <th>{t('messages.status')}</th>
               </tr>
             </thead>
             <tbody>

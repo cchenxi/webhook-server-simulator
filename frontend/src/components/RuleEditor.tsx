@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ResponseRule } from '../services/api';
 import { fetchRules, createRule, updateRule, deleteRule } from '../services/api';
+import { useTranslation } from '../i18n';
 
 interface HeaderEntry {
   key: string;
@@ -22,6 +23,7 @@ export default function RuleEditor() {
 
   const [form, setForm] = useState(emptyForm);
   const [headers, setHeaders] = useState<HeaderEntry[]>([]);
+  const { t } = useTranslation();
 
   const loadRules = useCallback(async () => {
     setLoading(true);
@@ -30,11 +32,11 @@ export default function RuleEditor() {
       const data = await fetchRules();
       setRules(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load rules');
+      setError(err instanceof Error ? err.message : t('rules.failedToLoad'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadRules();
@@ -77,18 +79,18 @@ export default function RuleEditor() {
       resetForm();
       await loadRules();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save rule');
+      setError(err instanceof Error ? err.message : t('rules.failedToSave'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this rule?')) return;
+    if (!confirm(t('rules.deleteConfirm'))) return;
     try {
       await deleteRule(id);
       if (editingId === id) resetForm();
       await loadRules();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete rule');
+      setError(err instanceof Error ? err.message : t('rules.failedToDelete'));
     }
   };
 
@@ -101,13 +103,13 @@ export default function RuleEditor() {
   return (
     <div className="rule-editor">
       <div className="rule-form-section">
-        <h3>{editingId ? 'Edit Rule' : 'Create New Rule'}</h3>
+        <h3>{editingId ? t('rules.editRule') : t('rules.createNew')}</h3>
         <form onSubmit={handleSubmit} className="rule-form">
           <div className="form-row">
-            <label>Path Pattern</label>
+            <label>{t('rules.pathPattern')}</label>
             <input
               type="text"
-              placeholder="/webhook/example/**"
+              placeholder={t('rules.pathPatternPlaceholder')}
               value={form.pathPattern}
               onChange={(e) => setForm({ ...form, pathPattern: e.target.value })}
               required
@@ -115,7 +117,7 @@ export default function RuleEditor() {
           </div>
           <div className="form-row-group">
             <div className="form-row">
-              <label>Status Code</label>
+              <label>{t('rules.statusCode')}</label>
               <input
                 type="number"
                 min={100}
@@ -126,7 +128,7 @@ export default function RuleEditor() {
               />
             </div>
             <div className="form-row">
-              <label>Delay (ms)</label>
+              <label>{t('rules.delayMs')}</label>
               <input
                 type="number"
                 min={0}
@@ -136,43 +138,43 @@ export default function RuleEditor() {
             </div>
           </div>
           <div className="form-row">
-            <label>Response Body</label>
+            <label>{t('rules.responseBody')}</label>
             <textarea
               rows={4}
-              placeholder='{"status": "ok"}'
+              placeholder={t('rules.responseBodyPlaceholder')}
               value={form.responseBody}
               onChange={(e) => setForm({ ...form, responseBody: e.target.value })}
             />
           </div>
           <div className="form-row">
             <label>
-              Response Headers
-              <button type="button" className="btn btn-sm btn-secondary" onClick={addHeader}>+ Add</button>
+              {t('rules.responseHeaders')}
+              <button type="button" className="btn btn-sm btn-secondary" onClick={addHeader}>{t('rules.addHeader')}</button>
             </label>
             {headers.map((h, idx) => (
               <div key={idx} className="header-entry">
                 <input
                   type="text"
-                  placeholder="Header name"
+                  placeholder={t('rules.headerNamePlaceholder')}
                   value={h.key}
                   onChange={(e) => updateHeader(idx, 'key', e.target.value)}
                 />
                 <input
                   type="text"
-                  placeholder="Header value"
+                  placeholder={t('rules.headerValuePlaceholder')}
                   value={h.value}
                   onChange={(e) => updateHeader(idx, 'value', e.target.value)}
                 />
-                <button type="button" className="btn btn-sm btn-danger" onClick={() => removeHeader(idx)}>Remove</button>
+                <button type="button" className="btn btn-sm btn-danger" onClick={() => removeHeader(idx)}>{t('rules.removeHeader')}</button>
               </div>
             ))}
           </div>
           <div className="form-actions">
             <button type="submit" className="btn btn-primary">
-              {editingId ? 'Update Rule' : 'Create Rule'}
+              {editingId ? t('rules.updateRule') : t('rules.createRule')}
             </button>
             {editingId && (
-              <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancel</button>
+              <button type="button" className="btn btn-secondary" onClick={resetForm}>{t('common.cancel')}</button>
             )}
           </div>
         </form>
@@ -181,23 +183,23 @@ export default function RuleEditor() {
       {error && <div className="error-banner">{error}</div>}
 
       <div className="rule-list-section">
-        <h3>Existing Rules</h3>
-        {loading && rules.length === 0 && <p>Loading rules...</p>}
+        <h3>{t('rules.existingRules')}</h3>
+        {loading && rules.length === 0 && <p>{t('rules.loadingRules')}</p>}
         {!loading && rules.length === 0 && (
           <div className="empty-state">
-            <p>No response rules configured</p>
-            <p className="empty-state-hint">Create a rule above to customize webhook responses</p>
+            <p>{t('rules.noRules')}</p>
+            <p className="empty-state-hint">{t('rules.noRulesHint')}</p>
           </div>
         )}
         {rules.length > 0 && (
           <table className="rules-table">
             <thead>
               <tr>
-                <th>Path Pattern</th>
-                <th>Status</th>
-                <th>Delay</th>
-                <th>Response Body</th>
-                <th>Actions</th>
+                <th>{t('rules.pathPatternCol')}</th>
+                <th>{t('rules.statusCol')}</th>
+                <th>{t('rules.delayCol')}</th>
+                <th>{t('rules.responseBodyCol')}</th>
+                <th>{t('rules.actionsCol')}</th>
               </tr>
             </thead>
             <tbody>
@@ -218,8 +220,8 @@ export default function RuleEditor() {
                     )}
                   </td>
                   <td className="action-cell">
-                    <button className="btn btn-sm btn-secondary" onClick={() => startEdit(rule)}>Edit</button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(rule.id)}>Delete</button>
+                    <button className="btn btn-sm btn-secondary" onClick={() => startEdit(rule)}>{t('common.edit')}</button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(rule.id)}>{t('common.delete')}</button>
                   </td>
                 </tr>
               ))}

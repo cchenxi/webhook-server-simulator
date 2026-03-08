@@ -8,11 +8,13 @@ import {
   updateBackendConfig,
 } from '../services/api';
 import type { BackendLogEntry, BackendConfig } from '../services/api';
+import { useTranslation } from '../i18n';
 
 const LOG_POLL_INTERVAL = 2000;
 
 export default function BackendPanel() {
   const { status, pid, uptime, config, error: statusError, refresh } = useBackendStatus();
+  const { t } = useTranslation();
 
   const [logs, setLogs] = useState<BackendLogEntry[]>([]);
   const [lastLogId, setLastLogId] = useState(0);
@@ -78,7 +80,7 @@ export default function BackendPanel() {
       if (result.error) setActionError(result.error);
       refresh();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Start failed');
+      setActionError(err instanceof Error ? err.message : t('backend.startFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -92,7 +94,7 @@ export default function BackendPanel() {
       if (result.error) setActionError(result.error);
       refresh();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Stop failed');
+      setActionError(err instanceof Error ? err.message : t('backend.stopFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -106,7 +108,7 @@ export default function BackendPanel() {
       if (result.error) setActionError(result.error);
       refresh();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Restart failed');
+      setActionError(err instanceof Error ? err.message : t('backend.restartFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -119,7 +121,7 @@ export default function BackendPanel() {
       setEditingConfig(false);
       refresh();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to save config');
+      setActionError(err instanceof Error ? err.message : t('backend.saveConfigFailed'));
     }
   }
 
@@ -150,7 +152,7 @@ export default function BackendPanel() {
     <div className="backend-panel">
       {/* Status & Controls */}
       <div className="backend-status-section">
-        <h3>Backend Server</h3>
+        <h3>{t('backend.server')}</h3>
         <div className="backend-controls">
           <div className="backend-status-display">
             <span className={`backend-status-dot ${statusClass}`} />
@@ -160,7 +162,7 @@ export default function BackendPanel() {
           </div>
           <div className="backend-actions">
             <div className="backend-mode-select">
-              <label>Mode:</label>
+              <label>{t('backend.mode')}:</label>
               <select
                 value={mode}
                 onChange={(e) => setMode(e.target.value as 'maven' | 'jar')}
@@ -171,13 +173,13 @@ export default function BackendPanel() {
               </select>
             </div>
             <button className="btn btn-primary" onClick={handleStart} disabled={!canStart || actionLoading}>
-              {actionLoading && status === 'stopped' ? 'Starting...' : 'Start'}
+              {actionLoading && status === 'stopped' ? t('backend.starting') : t('backend.start')}
             </button>
             <button className="btn btn-danger" onClick={() => handleStop()} disabled={!canStop || actionLoading}>
-              Stop
+              {t('backend.stop')}
             </button>
             <button className="btn btn-secondary" onClick={handleRestart} disabled={!canRestart || actionLoading}>
-              Restart
+              {t('backend.restart')}
             </button>
           </div>
         </div>
@@ -191,10 +193,10 @@ export default function BackendPanel() {
       {config && (
         <div className="backend-config-section">
           <div className="backend-config-header">
-            <h3>Configuration</h3>
+            <h3>{t('backend.configuration')}</h3>
             {!editingConfig && status === 'stopped' && (
               <button className="btn btn-sm btn-secondary" onClick={() => setEditingConfig(true)}>
-                Edit
+                {t('common.edit')}
               </button>
             )}
           </div>
@@ -202,7 +204,7 @@ export default function BackendPanel() {
             <div className="backend-config-form">
               <div className="form-row-group">
                 <div className="form-row">
-                  <label>Port</label>
+                  <label>{t('backend.port')}</label>
                   <input
                     type="number"
                     value={configForm.port ?? config.port}
@@ -210,7 +212,7 @@ export default function BackendPanel() {
                   />
                 </div>
                 <div className="form-row">
-                  <label>Backend Dir</label>
+                  <label>{t('backend.backendDir')}</label>
                   <input
                     type="text"
                     value={configForm.backendDir ?? config.backendDir}
@@ -219,7 +221,7 @@ export default function BackendPanel() {
                 </div>
               </div>
               <div className="form-row">
-                <label>JAR Path</label>
+                <label>{t('backend.jarPath')}</label>
                 <input
                   type="text"
                   value={configForm.jarPath ?? config.jarPath}
@@ -227,7 +229,7 @@ export default function BackendPanel() {
                 />
               </div>
               <div className="form-row">
-                <label>Java Opts</label>
+                <label>{t('backend.javaOpts')}</label>
                 <input
                   type="text"
                   value={configForm.javaOpts ?? config.javaOpts}
@@ -235,25 +237,25 @@ export default function BackendPanel() {
                 />
               </div>
               <div className="form-actions">
-                <button className="btn btn-primary" onClick={handleSaveConfig}>Save</button>
-                <button className="btn btn-secondary" onClick={() => setEditingConfig(false)}>Cancel</button>
+                <button className="btn btn-primary" onClick={handleSaveConfig}>{t('common.save')}</button>
+                <button className="btn btn-secondary" onClick={() => setEditingConfig(false)}>{t('common.cancel')}</button>
               </div>
             </div>
           ) : (
             <div className="config-cards">
               <div className="config-card">
                 <div className="config-card-value">{config.port}</div>
-                <div className="config-card-label">Port</div>
+                <div className="config-card-label">{t('backend.port')}</div>
               </div>
               <div className="config-card">
                 <div className="config-card-value">{config.mode}</div>
-                <div className="config-card-label">Mode</div>
+                <div className="config-card-label">{t('backend.mode')}</div>
               </div>
               <div className="config-card">
                 <div className="config-card-value backend-config-path" title={config.backendDir}>
                   {config.backendDir.split('/').pop() || config.backendDir}
                 </div>
-                <div className="config-card-label">Backend Dir</div>
+                <div className="config-card-label">{t('backend.backendDir')}</div>
               </div>
             </div>
           )}
@@ -263,12 +265,12 @@ export default function BackendPanel() {
       {/* Logs */}
       <div className="backend-logs-section">
         <div className="backend-logs-header">
-          <h3>Logs</h3>
+          <h3>{t('backend.logs')}</h3>
           <button
             className="btn btn-sm btn-secondary"
             onClick={() => { setLogs([]); setLastLogId(0); }}
           >
-            Clear
+            {t('backend.clearLogs')}
           </button>
         </div>
         <div
@@ -277,7 +279,7 @@ export default function BackendPanel() {
           onScroll={handleLogScroll}
         >
           {logs.length === 0 ? (
-            <div className="backend-logs-empty">No logs yet. Start the backend to see output.</div>
+            <div className="backend-logs-empty">{t('backend.noLogs')}</div>
           ) : (
             logs.map((entry) => (
               <div key={entry.id} className={`log-line log-${entry.stream}`}>
