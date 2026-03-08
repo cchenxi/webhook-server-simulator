@@ -6,6 +6,7 @@ import com.webhook.simulator.service.ConcurrencyControlService;
 import com.webhook.simulator.service.MessageStoreService;
 import com.webhook.simulator.service.ResponseRuleService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 public class WebhookReceiverController {
 
@@ -48,9 +50,11 @@ public class WebhookReceiverController {
         try {
             concurrencyControlService.acquire();
         } catch (ConcurrencyControlService.RateLimitExceededException e) {
+            log.warn("Rate limit exceeded for {} {}", request.getMethod(), request.getRequestURI());
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("{\"error\":\"Rate limit exceeded\"}");
         } catch (ConcurrencyControlService.ConcurrencyLimitExceededException e) {
+            log.warn("Concurrency limit exceeded for {} {}", request.getMethod(), request.getRequestURI());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body("{\"error\":\"Service unavailable, concurrency limit exceeded\"}");
         }
@@ -86,8 +90,11 @@ public class WebhookReceiverController {
 
             if (matchedRule.isPresent()) {
                 ResponseRule rule = matchedRule.get();
+                log.info("Matched rule [{}] for path {}, statusCode={}, delayMs={}",
+                        rule.getId(), path, rule.getStatusCode(), rule.getDelayMs());
 
                 if (rule.getDelayMs() > 0) {
+                    log.debug("Applying delay of {}ms for path {}", rule.getDelayMs(), path);
                     try {
                         Thread.sleep(rule.getDelayMs());
                     } catch (InterruptedException e) {
@@ -117,6 +124,7 @@ public class WebhookReceiverController {
                     .build();
 
             messageStoreService.addMessage(message);
+            log.info("Webhook received: {} {} from {} -> {}", method, path, sourceIp, statusCode);
 
             messagingTemplate.convertAndSend("/topic/messages", message);
 

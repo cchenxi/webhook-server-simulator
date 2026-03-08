@@ -1,6 +1,7 @@
 package com.webhook.simulator.service;
 
 import com.webhook.simulator.model.ResponseRule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Slf4j
 @Service
 public class ResponseRuleService {
 
@@ -26,6 +28,7 @@ public class ResponseRuleService {
             rule.setCreatedAt(Instant.now());
         }
         rules.add(rule);
+        log.info("Added response rule [{}] with pattern: {}", rule.getId(), rule.getPathPattern());
         return rule;
     }
 
@@ -48,18 +51,26 @@ public class ResponseRuleService {
                     updatedRule.setCreatedAt(existing.getCreatedAt());
                 }
                 rules.set(i, updatedRule);
+                log.info("Updated response rule [{}], pattern: {}", id, updatedRule.getPathPattern());
                 return Optional.of(updatedRule);
             }
         }
+        log.warn("Rule [{}] not found for update", id);
         return Optional.empty();
     }
 
     public boolean deleteRule(String id) {
-        return rules.removeIf(r -> r.getId().equals(id));
+        boolean removed = rules.removeIf(r -> r.getId().equals(id));
+        if (removed) {
+            log.info("Deleted response rule [{}]", id);
+        } else {
+            log.warn("Rule [{}] not found for deletion", id);
+        }
+        return removed;
     }
 
     public Optional<ResponseRule> matchRule(String path) {
-        return rules.stream()
+        Optional<ResponseRule> matched = rules.stream()
                 .filter(rule -> {
                     String pattern = rule.getPathPattern();
                     if (pattern == null || pattern.isBlank()) {
@@ -68,5 +79,11 @@ public class ResponseRuleService {
                     return pathMatcher.match(pattern, path);
                 })
                 .findFirst();
+        if (matched.isPresent()) {
+            log.debug("Path {} matched rule [{}] with pattern {}", path, matched.get().getId(), matched.get().getPathPattern());
+        } else {
+            log.debug("No matching rule found for path {}", path);
+        }
+        return matched;
     }
 }

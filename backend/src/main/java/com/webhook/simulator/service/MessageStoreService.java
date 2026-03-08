@@ -1,6 +1,7 @@
 package com.webhook.simulator.service;
 
 import com.webhook.simulator.model.WebhookMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+@Slf4j
 @Service
 public class MessageStoreService {
 
@@ -20,7 +22,9 @@ public class MessageStoreService {
         messages.addFirst(message);
         while (messages.size() > MAX_MESSAGES) {
             messages.removeLast();
+            log.debug("Message store exceeded max capacity ({}), oldest message evicted", MAX_MESSAGES);
         }
+        log.debug("Message stored [{}], total count: {}", message.getId(), messages.size());
     }
 
     public List<WebhookMessage> getMessages() {
@@ -34,7 +38,9 @@ public class MessageStoreService {
     }
 
     public void clearMessages() {
+        int count = messages.size();
         messages.clear();
+        log.info("Cleared {} stored messages", count);
     }
 
     public int getMessageCount() {

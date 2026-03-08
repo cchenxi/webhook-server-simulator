@@ -2,6 +2,7 @@ package com.webhook.simulator.controller;
 
 import com.webhook.simulator.model.WebhookMessage;
 import com.webhook.simulator.service.MessageStoreService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/messages")
 public class MessageQueryController {
@@ -28,6 +30,7 @@ public class MessageQueryController {
             @RequestParam(value = "search", required = false) String search) {
         List<WebhookMessage> messages = messageStoreService.getMessages();
         if (search != null && !search.isBlank()) {
+            log.info("Searching messages with keyword: {}", search);
             String lowerSearch = search.toLowerCase();
             messages = messages.stream()
                     .filter(m -> {
@@ -51,6 +54,7 @@ public class MessageQueryController {
 
     @DeleteMapping
     public ResponseEntity<Map<String, String>> clearMessages() {
+        log.info("Clearing all stored messages");
         messageStoreService.clearMessages();
         return ResponseEntity.ok(Map.of("status", "cleared"));
     }
