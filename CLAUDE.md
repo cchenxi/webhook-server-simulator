@@ -12,7 +12,7 @@ Webhook server simulator for development/debugging. Receives, records, and displ
 ```bash
 cd backend
 mvn compile              # compile only
-mvn spring-boot:run      # run on port 8080
+mvn spring-boot:run      # run on port 8080 (HTTP) + 8443 (HTTPS)
 ```
 
 ### Frontend (React 18 + Vite + TypeScript)
@@ -28,8 +28,11 @@ Note: The frontend includes a Vite plugin that can start/stop the backend from t
 
 ### Testing
 ```bash
-# Send test webhook
+# Send test webhook (HTTP)
 curl -X POST http://localhost:8080/webhook/test -H "Content-Type: application/json" -d '{"event":"test"}'
+
+# Send test webhook (HTTPS, -k to skip cert verification)
+curl -k -X POST https://localhost:8443/webhook/test -H "Content-Type: application/json" -d '{"event":"test"}'
 
 # Periodic webhook client (every 60s)
 ./webhook-client.sh [url]
@@ -38,7 +41,7 @@ curl -X POST http://localhost:8080/webhook/test -H "Content-Type: application/js
 ## Architecture
 
 ### Request Flow
-1. HTTP request hits `WebhookReceiverController` at `/webhook/**` (all methods)
+1. HTTP/HTTPS request hits `WebhookReceiverController` at `/webhook/**` (all methods)
 2. `ConcurrencyControlService.acquire()` — Semaphore check (503) then RateLimiter check (429)
 3. `ResponseRuleService.matchRule(path)` — AntPathMatcher glob matching, first-match wins
 4. If rule has `delayMs > 0`, sleep to simulate slow response
@@ -52,6 +55,7 @@ curl -X POST http://localhost:8080/webhook/test -H "Content-Type: application/js
 - **Thread-safe collections**: ConcurrentLinkedDeque (messages), CopyOnWriteArrayList (rules)
 - **Concurrency control**: Semaphore (max concurrent) + Guava RateLimiter (token bucket). `rejectOnFull=true` rejects immediately with 503; `false` queues up to `timeoutMs`
 - **Dynamic reconfiguration**: Concurrency params changeable at runtime via API — recreates Semaphore/RateLimiter instances
+- **HTTPS support**: `HttpsConnectorConfig` auto-generates a self-signed certificate (RSA 2048, CN=localhost, SAN: localhost + 127.0.0.1) at startup using JDK `sun.security.x509` API, stored in memory KeyStore. Adds a Tomcat HTTPS Connector on port 8443 alongside HTTP 8080. Uses `--add-exports java.base/sun.security.x509=ALL-UNNAMED` for both compile and runtime.
 
 ### Frontend-Backend Communication
 - **REST**: Frontend fetches `/api/*` endpoints, Vite proxies to `localhost:8080` in dev
