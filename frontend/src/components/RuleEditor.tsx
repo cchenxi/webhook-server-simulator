@@ -32,7 +32,11 @@ export default function RuleEditor() {
       const data = await fetchRules();
       setRules(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('rules.failedToLoad'));
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Failed to fetch') || msg.includes('HTTP 500')) {
+        return;
+      }
+      setError(msg || t('rules.failedToLoad'));
     } finally {
       setLoading(false);
     }

@@ -25,7 +25,11 @@ export default function ConcurrencyPanel() {
       setConfig(data);
       setForm(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('concurrency.failedToLoad'));
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Failed to fetch') || msg.includes('HTTP 500')) {
+        return;
+      }
+      setError(msg || t('concurrency.failedToLoad'));
     } finally {
       setLoading(false);
     }

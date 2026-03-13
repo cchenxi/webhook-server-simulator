@@ -44,10 +44,11 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
       const data = await fetchMessages(query);
       setMessages(data);
     } catch (err) {
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('Failed to fetch') || msg.includes('HTTP 500')) {
         return;
       }
-      setError(err instanceof Error ? err.message : t('messages.failedToLoad'));
+      setError(msg || t('messages.failedToLoad'));
     } finally {
       setLoading(false);
     }
