@@ -101,6 +101,7 @@ const zh = {
     restart: '重启',
     configuration: '配置',
     port: '端口',
+    httpsPort: 'HTTPS 端口',
     backendDir: '后端目录',
     jarPath: 'JAR 路径',
     javaOpts: 'Java 选项',

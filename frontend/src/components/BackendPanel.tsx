@@ -248,6 +248,10 @@ export default function BackendPanel() {
                 <div className="config-card-label">{t('backend.port')}</div>
               </div>
               <div className="config-card">
+                <div className="config-card-value">8443</div>
+                <div className="config-card-label">{t('backend.httpsPort')}</div>
+              </div>
+              <div className="config-card">
                 <div className="config-card-value">{config.mode}</div>
                 <div className="config-card-label">{t('backend.mode')}</div>
               </div>

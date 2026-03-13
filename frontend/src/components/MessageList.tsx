@@ -44,6 +44,9 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
       const data = await fetchMessages(query);
       setMessages(data);
     } catch (err) {
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        return;
+      }
       setError(err instanceof Error ? err.message : t('messages.failedToLoad'));
     } finally {
       setLoading(false);

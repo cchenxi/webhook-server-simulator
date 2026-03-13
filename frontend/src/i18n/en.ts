@@ -103,6 +103,7 @@ const en: TranslationMessages = {
     restart: 'Restart',
     configuration: 'Configuration',
     port: 'Port',
+    httpsPort: 'HTTPS Port',
     backendDir: 'Backend Dir',
     jarPath: 'JAR Path',
     javaOpts: 'Java Opts',
