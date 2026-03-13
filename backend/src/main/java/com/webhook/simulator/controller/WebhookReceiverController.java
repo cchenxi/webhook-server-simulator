@@ -119,6 +119,7 @@ public class WebhookReceiverController {
                     .body(body)
                     .queryParams(queryParams)
                     .sourceIp(sourceIp)
+                    .protocol(request.isSecure() ? "HTTPS" : "HTTP")
                     .timestamp(Instant.now())
                     .responseStatusCode(statusCode)
                     .build();

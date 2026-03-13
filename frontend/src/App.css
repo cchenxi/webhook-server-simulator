@@ -322,6 +322,18 @@ body {
 .status-ok { background: #dcfce7; color: #166534; }
 .status-error { background: #fecaca; color: #991b1b; }
 
+.protocol-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.protocol-http { background: #e0e7ff; color: #3730a3; }
+.protocol-https { background: #d1fae5; color: #065f46; }
+
 /* ===== Message Detail ===== */
 .message-detail {
   padding: 20px;

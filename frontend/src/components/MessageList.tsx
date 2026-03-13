@@ -123,6 +123,7 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
                 <th>{t('messages.time')}</th>
                 <th>{t('messages.method')}</th>
                 <th>{t('messages.path')}</th>
+                <th>{t('messageDetail.protocol')}</th>
                 <th>{t('messages.status')}</th>
               </tr>
             </thead>
@@ -140,6 +141,11 @@ export default function MessageList({ onSelectMessage, selectedMessageId, latest
                     </span>
                   </td>
                   <td className="msg-path">{msg.path}</td>
+                  <td>
+                    <span className={`protocol-badge ${msg.protocol === 'HTTPS' ? 'protocol-https' : 'protocol-http'}`}>
+                      {msg.protocol || 'HTTP'}
+                    </span>
+                  </td>
                   <td>
                     <span className={`status-badge ${msg.responseStatusCode >= 400 ? 'status-error' : 'status-ok'}`}>
                       {msg.responseStatusCode}

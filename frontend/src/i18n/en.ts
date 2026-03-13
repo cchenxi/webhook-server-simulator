@@ -34,6 +34,7 @@ const en: TranslationMessages = {
     method: 'Method',
     path: 'Path',
     sourceIp: 'Source IP',
+    protocol: 'Protocol',
     timestamp: 'Timestamp',
     responseStatus: 'Response Status',
     messageId: 'Message ID',

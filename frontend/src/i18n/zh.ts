@@ -32,6 +32,7 @@ const zh = {
     method: '方法',
     path: '路径',
     sourceIp: '来源 IP',
+    protocol: '协议',
     timestamp: '时间',
     responseStatus: '响应状态码',
     messageId: '消息 ID',

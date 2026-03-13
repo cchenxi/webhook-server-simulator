@@ -65,6 +65,12 @@ export default function MessageDetail({ message }: MessageDetailProps) {
           </div>
           <div className="detail-label">{t('messageDetail.path')}</div>
           <div className="detail-value"><code>{message.path}</code></div>
+          <div className="detail-label">{t('messageDetail.protocol')}</div>
+          <div className="detail-value">
+            <span className={`protocol-badge ${message.protocol === 'HTTPS' ? 'protocol-https' : 'protocol-http'}`}>
+              {message.protocol || 'HTTP'}
+            </span>
+          </div>
           <div className="detail-label">{t('messageDetail.sourceIp')}</div>
           <div className="detail-value">{message.sourceIp}</div>
           <div className="detail-label">{t('messageDetail.timestamp')}</div>

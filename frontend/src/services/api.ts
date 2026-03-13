@@ -6,6 +6,7 @@ export interface WebhookMessage {
   body: string;
   queryParams: Record<string, string>;
   sourceIp: string;
+  protocol: string;
   timestamp: string;
   responseStatusCode: number;
 }

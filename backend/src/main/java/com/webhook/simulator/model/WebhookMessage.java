@@ -20,6 +20,7 @@ public class WebhookMessage {
     private String body;
     private Map<String, String> queryParams;
     private String sourceIp;
+    private String protocol;
     private Instant timestamp;
     private int responseStatusCode;
 }
