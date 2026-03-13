@@ -8,6 +8,8 @@
 - **前端**: React 18 + Vite + TypeScript
 - **实时通信**: WebSocket（STOMP over SockJS）
 - **数据存储**: 内存（最近 1000 条消息）
+- **HTTPS**: 自签名证书，端口 8443
+- **国际化**: 中文 / English（自动检测浏览器语言）
 
 ## 快速开始
 
@@ -32,26 +34,32 @@ cd backend
 mvn spring-boot:run
 ```
 
-后端运行在 `http://localhost:8080`。前端会自动检测到已运行的后端并标记为 `external` 状态。
+后端运行在 `http://localhost:8080`（HTTP）和 `https://localhost:8443`（HTTPS，自签名证书）。前端会自动检测到已运行的后端并标记为 `external` 状态。
 
 ### 3. 发送 Webhook
 
 手动发送单条测试消息：
 
 ```bash
+# HTTP
 curl -X POST http://localhost:8080/webhook/test \
+  -H "Content-Type: application/json" \
+  -d '{"event":"test","data":"hello"}'
+
+# HTTPS（-k 跳过自签名证书验证）
+curl -k -X POST https://localhost:8443/webhook/test \
   -H "Content-Type: application/json" \
   -d '{"event":"test","data":"hello"}'
 ```
 
-使用内置客户端脚本每 60 秒自动发送一条心跳消息：
+使用内置客户端脚本每 60 秒自动发送心跳消息（同时发送到 HTTP 和 HTTPS）：
 
 ```bash
-# 默认发送到 /webhook/test
+# 默认发送到 localhost:8080 (HTTP) + localhost:8443 (HTTPS)
 ./webhook-client.sh
 
-# 自定义路径
-./webhook-client.sh http://localhost:8080/webhook/heartbeat
+# 自定义 URL
+./webhook-client.sh http://localhost:8080/webhook/heartbeat https://localhost:8443/webhook/heartbeat
 ```
 
 发送后在 Web UI 中即可实时看到消息。
@@ -97,13 +105,14 @@ curl -X PUT http://localhost:8080/api/concurrency \
 ### Webhook 接收
 
 - 支持所有 HTTP 方法（GET/POST/PUT/DELETE/PATCH）
+- 支持 HTTP（8080）和 HTTPS（8443）双端口
 - 通配路径 `/webhook/**`，接收任意子路径
-- 记录：路径、方法、Headers、Body、Query Params、来源 IP、时间戳
+- 记录：路径、方法、协议（HTTP/HTTPS）、Headers、Body、Query Params、来源 IP、时间戳
 
 ### Web UI
 
-- **消息列表**: 实时显示收到的 webhook 消息，支持搜索过滤
-- **消息详情**: 查看完整 Headers、Body（JSON 自动格式化）、元信息
+- **消息列表**: 实时显示收到的 webhook 消息，支持搜索过滤，显示协议标识（HTTP/HTTPS）
+- **消息详情**: 查看完整 Headers、Body（JSON 自动格式化）、协议、元信息
 - **响应规则编辑器**: 管理自定义响应规则（路径模式、状态码、响应体、延迟）
 - **并发控制面板**: 查看和动态调整并发/限流参数
 - **后端管理面板**: 一键启停后端服务，支持 Maven/JAR 模式切换、配置编辑、实时日志查看
@@ -167,6 +176,7 @@ webhook-server-simulator/
 │   └── src/
 │       ├── components/       # UI 组件（含 BackendPanel）
 │       ├── hooks/            # WebSocket / 后端状态 hooks
+│       ├── i18n/            # 国际化（中文/English）
 │       └── services/         # API 调用
 └── webhook-client.sh         # 定时发送 webhook 的测试客户端
 ```

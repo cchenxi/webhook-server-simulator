@@ -34,8 +34,8 @@ curl -X POST http://localhost:8080/webhook/test -H "Content-Type: application/js
 # Send test webhook (HTTPS, -k to skip cert verification)
 curl -k -X POST https://localhost:8443/webhook/test -H "Content-Type: application/json" -d '{"event":"test"}'
 
-# Periodic webhook client (every 60s)
-./webhook-client.sh [url]
+# Periodic webhook client (every 60s, sends to both HTTP and HTTPS by default)
+./webhook-client.sh [http_url] [https_url]
 ```
 
 ## Architecture
@@ -45,7 +45,7 @@ curl -k -X POST https://localhost:8443/webhook/test -H "Content-Type: applicatio
 2. `ConcurrencyControlService.acquire()` — Semaphore check (503) then RateLimiter check (429)
 3. `ResponseRuleService.matchRule(path)` — AntPathMatcher glob matching, first-match wins
 4. If rule has `delayMs > 0`, sleep to simulate slow response
-5. `MessageStoreService.addMessage()` — stores in ConcurrentLinkedDeque (max 1000, FIFO eviction)
+5. `MessageStoreService.addMessage()` — stores in ConcurrentLinkedDeque (max 1000, FIFO eviction), includes `protocol` field (HTTP/HTTPS via `request.isSecure()`)
 6. `SimpMessagingTemplate.convertAndSend("/topic/messages")` — WebSocket broadcast
 7. Return matched rule's response or default `200 {"status":"received"}`
 8. Release semaphore in finally block
@@ -67,8 +67,10 @@ curl -k -X POST https://localhost:8443/webhook/test -H "Content-Type: applicatio
 - `useWebSocket` hook — STOMP client with 3s reconnect, 10s heartbeat
 - `useBackendStatus` hook — polls `/api/backend/status` every 3s
 - `api.ts` — fetch wrapper for all REST endpoints, exports TypeScript interfaces
-- `BackendPanel.tsx` — backend process management UI (start/stop/restart, config, logs)
+- `BackendPanel.tsx` — backend process management UI (start/stop/restart, config with HTTP/HTTPS ports, logs)
 - Components are self-contained with local state; no external state management library
+- **i18n**: `src/i18n/` with `en.ts` and `zh.ts`, auto-detects browser language
+- **Graceful degradation**: All pages silently ignore network/proxy errors when backend is unavailable (no error banners)
 
 ### Backend Process Management (Vite Plugin)
 - `vite-plugin-backend-manager.ts` — Vite plugin that runs as middleware, intercepting `/api/backend/*` before Vite proxy
