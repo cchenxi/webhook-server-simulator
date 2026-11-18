@@ -5,7 +5,7 @@ import com.webhook.simulator.model.WebhookMessage;
 import com.webhook.simulator.service.ConcurrencyControlService;
 import com.webhook.simulator.service.MessageStoreService;
 import com.webhook.simulator.service.ResponseRuleService;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

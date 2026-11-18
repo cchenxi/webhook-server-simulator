@@ -14,7 +14,7 @@
 
 ## 技术栈
 
-- **后端**: Java 17 + Spring Boot 3.3 + Maven
+- **后端**: Java 8 字节码 + Spring Boot 2.7 + Maven（同一产物可在 JDK 8、17、21 上运行）
 - **前端**: React 18 + Vite + TypeScript
 - **实时通信**: WebSocket（STOMP over SockJS）
 - **数据存储**: 内存（最近 1000 条消息）
@@ -25,10 +25,12 @@
 
 | 工具 | 最低版本 | 验证命令 |
 |------|----------|----------|
-| Java | 17+ | `java --version` |
+| Java | 8、17 或 21 | `java -version` |
 | Maven | 3.6+ | `mvn --version` |
 | Node.js | 18+ | `node --version` |
 | npm | 9+ | `npm --version` |
+
+后端源码和依赖都保持 Java 8 可用。JDK 17 和 21 构建时会加上 `--release 8`，产物字节码版本为 52。用 JDK 8 打出的 JAR 可以直接在 JDK 17 和 21 上运行，不需要 `--add-exports`。
 
 ## 快速开始
 
@@ -255,8 +257,8 @@ kill -9 <PID>
 - 可设置自定义临时目录：`java -Djava.io.tmpdir=/path/to/tmp -jar app.jar`
 
 **错误：HTTPS 证书生成失败**
-- 确保使用 JDK（而非 JRE），`sun.security.x509` 包需要 JDK 运行时
-- Maven 启动时需配置 `--add-exports` JVM 参数（已在 `pom.xml` 中配置）
+- 证书由 BouncyCastle 在启动时生成（RSA 2048，CN=localhost，SAN 含 localhost 和 127.0.0.1）
+- JDK 8、17、21 使用同一套代码，不需要 `--add-exports` 或额外的 JVM 参数
 
 ### Maven 编译失败
 

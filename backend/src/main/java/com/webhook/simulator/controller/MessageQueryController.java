@@ -4,6 +4,7 @@ import com.webhook.simulator.model.WebhookMessage;
 import com.webhook.simulator.service.MessageStoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -29,7 +32,7 @@ public class MessageQueryController {
     public ResponseEntity<List<WebhookMessage>> getMessages(
             @RequestParam(value = "search", required = false) String search) {
         List<WebhookMessage> messages = messageStoreService.getMessages();
-        if (search != null && !search.isBlank()) {
+        if (StringUtils.hasText(search)) {
             log.info("Searching messages with keyword: {}", search);
             String lowerSearch = search.toLowerCase();
             messages = messages.stream()
@@ -40,7 +43,7 @@ public class MessageQueryController {
                                 m.getBody().toLowerCase().contains(lowerSearch);
                         return matchesPath || matchesBody;
                     })
-                    .toList();
+                    .collect(Collectors.toList());
         }
         return ResponseEntity.ok(messages);
     }
@@ -56,11 +59,11 @@ public class MessageQueryController {
     public ResponseEntity<Map<String, String>> clearMessages() {
         log.info("Clearing all stored messages");
         messageStoreService.clearMessages();
-        return ResponseEntity.ok(Map.of("status", "cleared"));
+        return ResponseEntity.ok(Collections.singletonMap("status", "cleared"));
     }
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Integer>> getMessageCount() {
-        return ResponseEntity.ok(Map.of("count", messageStoreService.getMessageCount()));
+        return ResponseEntity.ok(Collections.singletonMap("count", messageStoreService.getMessageCount()));
     }
 }
