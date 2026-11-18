@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class RuleConfigController {
         boolean deleted = responseRuleService.deleteRule(id);
         if (deleted) {
             log.info("Deleted response rule [{}]", id);
-            return ResponseEntity.ok(Map.of("status", "deleted"));
+            return ResponseEntity.ok(Collections.singletonMap("status", "deleted"));
         }
         log.warn("Attempted to delete non-existent rule [{}]", id);
         return ResponseEntity.notFound().build();

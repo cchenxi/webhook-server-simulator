@@ -4,6 +4,7 @@ import com.webhook.simulator.model.ResponseRule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class ResponseRuleService {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     public ResponseRule addRule(ResponseRule rule) {
-        if (rule.getId() == null || rule.getId().isBlank()) {
+        if (!StringUtils.hasText(rule.getId())) {
             rule.setId(UUID.randomUUID().toString());
         }
         if (rule.getCreatedAt() == null) {
@@ -73,7 +74,7 @@ public class ResponseRuleService {
         Optional<ResponseRule> matched = rules.stream()
                 .filter(rule -> {
                     String pattern = rule.getPathPattern();
-                    if (pattern == null || pattern.isBlank()) {
+                    if (!StringUtils.hasText(pattern)) {
                         return false;
                     }
                     return pathMatcher.match(pattern, path);

@@ -8,7 +8,9 @@ Webhook server simulator for development/debugging. Receives, records, and displ
 
 ## Build & Run Commands
 
-### Backend (Java 17 + Spring Boot 3.3 + Maven)
+### Backend (Java 8 bytecode + Spring Boot 2.7 + Maven)
+
+同一套源码面向 JDK 8、17、21。JDK 17/21 构建使用 `--release 8`，产物可在这三个 JDK 上运行。
 ```bash
 cd backend
 mvn compile              # compile only
@@ -51,11 +53,12 @@ curl -k -X POST https://localhost:8443/webhook/test -H "Content-Type: applicatio
 8. Release semaphore in finally block
 
 ### Backend Key Design
+- **JDK baseline**: Spring Boot 2.7.18 (Java 8 through 21). Spring Boot 3.3 cannot run on JDK 8. Application code stays on Java 8 APIs (`javax.servlet`, no `Map.of` / `String.isBlank` / `Stream.toList`).
 - **All storage is in-memory** — no database, data lost on restart
 - **Thread-safe collections**: ConcurrentLinkedDeque (messages), CopyOnWriteArrayList (rules)
 - **Concurrency control**: Semaphore (max concurrent) + Guava RateLimiter (token bucket). `rejectOnFull=true` rejects immediately with 503; `false` queues up to `timeoutMs`
 - **Dynamic reconfiguration**: Concurrency params changeable at runtime via API — recreates Semaphore/RateLimiter instances
-- **HTTPS support**: `HttpsConnectorConfig` auto-generates a self-signed certificate (RSA 2048, CN=localhost, SAN: localhost + 127.0.0.1) at startup using JDK `sun.security.x509` API, stored in memory KeyStore. Adds a Tomcat HTTPS Connector on port 8443 alongside HTTP 8080. Uses `--add-exports java.base/sun.security.x509=ALL-UNNAMED` for both compile and runtime.
+- **HTTPS support**: `HttpsConnectorConfig` auto-generates a self-signed certificate (RSA 2048, CN=localhost, SAN: localhost + 127.0.0.1) at startup with BouncyCastle (`bcpkix-jdk18on`), stored in an in-memory KeyStore. Adds a Tomcat HTTPS Connector on port 8443 alongside HTTP 8080. BouncyCastle is used because `sun.security.x509` is not source- or bytecode-compatible across JDK 8, 17, and 21, and does not need `--add-exports`.
 
 ### Frontend-Backend Communication
 - **REST**: Frontend fetches `/api/*` endpoints, Vite proxies to `localhost:8080` in dev

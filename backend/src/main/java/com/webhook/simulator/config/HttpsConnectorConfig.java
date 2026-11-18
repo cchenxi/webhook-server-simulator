@@ -4,6 +4,15 @@ import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -12,10 +21,12 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import sun.security.x509.*;
 
 import java.math.BigInteger;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
@@ -65,8 +76,11 @@ public class HttpsConnectorConfig {
         return connector;
     }
 
-    @SuppressWarnings("restriction")
-    private KeyStore generateSelfSignedCertificate() throws Exception {
+    /**
+     * RSA 2048 self-signed certificate, CN=localhost, SAN localhost and 127.0.0.1, valid for one year.
+     * Built with BouncyCastle so the same bytecode runs on JDK 8, 17, and 21.
+     */
+    static KeyStore generateSelfSignedCertificate() throws Exception {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
         keyPairGen.initialize(2048, new SecureRandom());
         KeyPair keyPair = keyPairGen.generateKeyPair();
@@ -77,31 +91,22 @@ public class HttpsConnectorConfig {
         Date notBefore = new Date(now);
         Date notAfter = new Date(now + 365L * 24 * 60 * 60 * 1000);
 
-        CertificateValidity validity = new CertificateValidity(notBefore, notAfter);
+        BigInteger serialNumber = new BigInteger(63, new SecureRandom());
+        if (serialNumber.signum() == 0) {
+            serialNumber = BigInteger.ONE;
+        }
 
-        BigInteger serialNumber = new BigInteger(64, new SecureRandom());
+        GeneralNames sans = new GeneralNames(new GeneralName[]{
+                new GeneralName(GeneralName.dNSName, "localhost"),
+                new GeneralName(GeneralName.iPAddress, "127.0.0.1")
+        });
 
-        X509CertInfo certInfo = new X509CertInfo();
-        certInfo.set(X509CertInfo.VALIDITY, validity);
-        certInfo.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(serialNumber));
-        certInfo.set(X509CertInfo.SUBJECT, owner);
-        certInfo.set(X509CertInfo.ISSUER, owner);
-        certInfo.set(X509CertInfo.KEY, new CertificateX509Key(keyPair.getPublic()));
-        certInfo.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
+        X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
+                owner, serialNumber, notBefore, notAfter, owner, keyPair.getPublic());
+        builder.addExtension(Extension.subjectAlternativeName, false, sans);
 
-        AlgorithmId algorithm = AlgorithmId.get("SHA256withRSA");
-        certInfo.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(algorithm));
-
-        GeneralNames generalNames = new GeneralNames();
-        generalNames.add(new GeneralName(new DNSName("localhost")));
-        generalNames.add(new GeneralName(new IPAddressName("127.0.0.1")));
-        SubjectAlternativeNameExtension sanExt = new SubjectAlternativeNameExtension(generalNames);
-        CertificateExtensions extensions = new CertificateExtensions();
-        extensions.set(SubjectAlternativeNameExtension.NAME, sanExt);
-        certInfo.set(X509CertInfo.EXTENSIONS, extensions);
-
-        X509CertImpl cert = new X509CertImpl(certInfo);
-        cert.sign(keyPair.getPrivate(), "SHA256withRSA");
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+        X509Certificate cert = new JcaX509CertificateConverter().getCertificate(builder.build(signer));
 
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, KEYSTORE_PASSWORD.toCharArray());

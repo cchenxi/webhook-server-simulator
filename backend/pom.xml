@@ -7,7 +7,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <!-- Boot 3.x requires Java 17. 2.7.18 is the last line that runs on JDK 8, 17, and 21. -->
+        <version>2.7.18</version>
         <relativePath/>
     </parent>
 
@@ -18,11 +19,10 @@
     <description>Webhook Server Simulator</description>
 
     <properties>
-        <java.version>17</java.version>
-        <maven.compiler.release></maven.compiler.release>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <!-- Bytecode level 8. JDK 9+ builds additionally set release 8 in a profile. -->
+        <java.version>1.8</java.version>
         <guava.version>33.0.0-jre</guava.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
     </properties>
 
     <dependencies>
@@ -40,6 +40,13 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+
+        <!-- Public certificate API. sun.security.x509 is not stable across JDK 8, 17, and 21. -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
 
         <dependency>
@@ -68,20 +75,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>java.base/sun.security.x509=ALL-UNNAMED</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <jvmArguments>--add-exports java.base/sun.security.x509=ALL-UNNAMED</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -92,4 +88,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>java8-release</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+    </profiles>
 </project>
